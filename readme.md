@@ -18,7 +18,7 @@ az keyvault secret set --vault-name $kvName --name "db-credentials" --value "abs
 ```
 
 ## Create a dotnet core app & deploy on a Web App
-The sample dotnet core application is placed [here](\src).  
+The sample dotnet core application is placed [here](/src).  
 The application tries to access key vault created above & fetch the secret stored using the system assigned managed identity of WebApp. 
 ```bash
 # Download & build dotnet app locally. This sample is using dotnet core version 3.1.300
@@ -55,7 +55,7 @@ git -c http.extraheader="Authorization: Bearer $accessToken"  push $localGitUrlA
 
 Browse the application by typing the url - http://wa-abs-kv.azurewebsites.net/keyvault. It should show the below page.
 
-![Alt text](\images\mi-no-access-keyvault.jpg)
+![Alt text](/images/mi-no-access-keyvault.jpg)
 
 ## Create and assign a managed identity
 The web app will access the Azure Key Vault using system assigned managed identity which is created for the WebApp. Once the managed identity is given access to perform Get & List operations on the secrets stored in Key Vault, the Web App will be able to fetch the secrets.
@@ -74,7 +74,7 @@ az webapp restart -g $rgName -n $waName
 ```
 Browse the application by typing the url - http://wa-abs-kv.azurewebsites.net/keyvault. It should show the below page.
 
-![Alt text](\images\mi-access-keyvault.jpg)
+![Alt text](/images/mi-access-keyvault.jpg)
 
 ## Delete resources
 ```bash
