@@ -48,7 +48,7 @@ namespace akvwebapp
                 KeyVaultSecret secret = client.GetSecret("db-credentials");
                 secretValue = secret.Value;
             }
-            catch (System.Exception)
+            catch (Exception ex)
             {                
                 secretValue = "Cannot access key vault. Set up Managed Identity!!!";
             }
