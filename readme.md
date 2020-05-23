@@ -1,4 +1,9 @@
 # Azure Key Vault, Web App & Managed Identity
+A common challenge when building cloud applications is to manage the credentials in the application code for authenticating to cloud services. Keeping the credentials secure is an important task and ideally, the credentials should never appear on developer workstations and neither they should be checked into source control. Azure Key Vault provides a way to securely store credentials, secrets, and other keys, but the code has to authenticate to Key Vault to retrieve them. This brings us back to square one.
+
+The managed identities for Azure resources feature in Azure Active Directory (Azure AD) solves this problem. The feature provides Azure services with an automatically managed identity in Azure AD. One can use the identity to authenticate to any service that supports Azure AD authentication, including Key Vault, without any credentials in the application code.
+
+Lets see this in action.
 
 ## Login to Azure & create a resource group
 ```bash
@@ -86,5 +91,6 @@ az keyvault delete --name $kvName -g $rgName
 ```
 
 # References
+* [Managed identities for Azure resources](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview)
 * [Using managed identity to connect Key Vault to an Azure Web App](https://docs.microsoft.com/en-us/azure/key-vault/general/tutorial-net-create-vault-azure-web-app)
 * [Service principal to perform git operation](https://github.com/projectkudu/kudu/wiki/Using-Service-Principal-to-perform-git-operation)
