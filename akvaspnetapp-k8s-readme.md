@@ -24,6 +24,7 @@ replicaset.apps/akvaspnetapp-5c7677c8f6   1         1         1       13m   akva
 ### To Do
 * Test with AKS
 * Update code to reload with change in config map
+* Add documentation on configmap
 
 ## References
 [Config Maps in dotnet core](https://medium.com/@fbeltrao/automatically-reload-configuration-changes-based-on-kubernetes-config-maps-in-a-net-d956f8c8399a)
