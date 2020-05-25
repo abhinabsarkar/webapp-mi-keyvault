@@ -9,15 +9,31 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using System.IO;
 
 namespace akvwebapp
 {
     public class Startup
     {
+
+        string vaultUri = "";
+        string dbCredentials = "";
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            var builder = new ConfigurationBuilder()
+                 .SetBasePath(Directory.GetCurrentDirectory())
+                 .AddJsonFile("config/appsettings.json");
+
+            var config = builder.Build();
+
+            var appConfig = config.GetSection("EnvironmentConfig").Get<EnvironmentConfig>();
+            vaultUri = appConfig.VaultUri;
+            dbCredentials = appConfig.DBCredentials;
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -28,7 +44,7 @@ namespace akvwebapp
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseRouting();
+            app.UseRouting();            
 
             SecretClientOptions options = new SecretClientOptions()
             {
@@ -44,8 +60,8 @@ namespace akvwebapp
             string secretValue = null;
             try
             {
-                var client = new SecretClient(new Uri("https://kv-abs.vault.azure.net/"), new DefaultAzureCredential(),options);
-                KeyVaultSecret secret = client.GetSecret("db-credentials");
+                var client = new SecretClient(new Uri(vaultUri), new DefaultAzureCredential(),options);
+                KeyVaultSecret secret = client.GetSecret(dbCredentials);
                 secretValue = secret.Value;
             }
             catch (Exception)
@@ -63,7 +79,7 @@ namespace akvwebapp
 
                 // Set up the response to demonstrate Azure Key Vault
                 endpoints.MapGet("/keyvault", async context =>
-                {
+                {                    
                     await context.Response.WriteAsync(secretValue);
                 });
             });
