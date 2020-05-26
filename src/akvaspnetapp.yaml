@@ -30,8 +30,10 @@ spec:
       app: akvaspnetapp
   template:
     metadata:
+      name: akvaspnetapp
       labels:
         app: akvaspnetapp
+        aadpodidbinding: mi-akvaspnetapp
     spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux

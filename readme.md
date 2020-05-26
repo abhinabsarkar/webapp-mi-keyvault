@@ -25,7 +25,7 @@ az keyvault secret set --vault-name $kvName --name "db-credentials" --value "abs
 If the key vault url is different, update the same in the dotnet core application.
 
 ## Create a dotnet core app & deploy on a Web App
-The sample dotnet core application is placed [here](/src).  
+The sample dotnet core application is placed [here](/src/akvaspnetapp).  
 The application tries to access key vault created above & fetch the secret stored using the system assigned managed identity of Azure WebApp. 
 ```bash
 # Download & build dotnet app locally. This sample is using dotnet core version 3.1.300
