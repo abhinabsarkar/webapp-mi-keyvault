@@ -9,41 +9,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using System.IO;
 
 namespace akvwebapp
 {
     public class Startup
     {
-
-        string vaultUri = "";
-        string dbCredentials = "";
-        // flag to check if running locally in a container (not in k8s)
-        bool standAloneContainer = true;
-        
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            var builder = new ConfigurationBuilder()
-                 .SetBasePath(Directory.GetCurrentDirectory())
-                 // To enable it to read it from configmap in k8s, updated the path.  
-                 // In the k8s, the appsettings.json will be placed inside config folder.                 
-                 .AddJsonFile("config/appsettings.json", optional: true, reloadOnChange: true);
-
-            var config = builder.Build();
-
-            var appConfig = config.GetSection("EnvironmentConfig").Get<EnvironmentConfig>();
-            // if running locally in a container which is not in k8s & no configmaps configured
-            if (appConfig != null)
-            {
-                vaultUri = appConfig.VaultUri;
-                dbCredentials = appConfig.DBCredentials;
-                standAloneContainer =  false;
-            }
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,7 +28,7 @@ namespace akvwebapp
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseRouting();            
+            app.UseRouting();
 
             SecretClientOptions options = new SecretClientOptions()
             {
@@ -70,22 +44,13 @@ namespace akvwebapp
             string secretValue = null;
             try
             {
-                // If running in kubernetes
-                if (standAloneContainer == false)
-                {
-                    var client = new SecretClient(new Uri(vaultUri), new DefaultAzureCredential(),options);
-                    KeyVaultSecret secret = client.GetSecret(dbCredentials);
-                    secretValue = secret.Value;
-                }
-                else
-                {
-                    secretValue = "The app running locally on a container cannot access the appsettings.json inside config folder which is created by k8s configmap";
-                }
-
+                var client = new SecretClient(new Uri("https://kv-abs.vault.azure.net/"), new DefaultAzureCredential(),options);
+                KeyVaultSecret secret = client.GetSecret("db-credentials");
+                secretValue = secret.Value;
             }
-            catch (Exception ex)
-            {                                
-                secretValue = "Cannot access key vault. " + Environment.NewLine + ex.Message;
+            catch (System.Exception)
+            {                
+                secretValue = "Cannot access key vault. Set up Managed Identity!!!";
             }
 
             app.UseEndpoints(endpoints =>
@@ -98,7 +63,7 @@ namespace akvwebapp
 
                 // Set up the response to demonstrate Azure Key Vault
                 endpoints.MapGet("/keyvault", async context =>
-                {                    
+                {
                     await context.Response.WriteAsync(secretValue);
                 });
             });
