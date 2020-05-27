@@ -126,9 +126,13 @@ Test the application by browsing the External-IP of the service akvaspnetapp. If
 
 ![Alt text](/images/aks-mi-access-keyvault.jpg)
 
-Change the configmap,  restart the pod
+To test if the appsettings.json configuration is read from configmap, change the value of the EnvironmentConfig.dbCredentials to say db-credentials1 in akvaspnetapp.yaml & restart the pod. (Restarting is required because the configurations don't reload in this sample code)
 ```bash
+# Apply the updated config
+kubectl apply -f akvaspnetapp.yaml
+# Restart the pod
 kubectl scale deployment akvaspnetapp --replicas=0
+kubectl scale deployment akvaspnetapp --replicas=1
 ```
 ## Clean up the resources
 ```bash

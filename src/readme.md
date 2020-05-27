@@ -1,4 +1,4 @@
-# Docker hub image - abhinabsarkar/abs-aspnetapp:v1
+# Docker hub image - abhinabsarkar/abs-akvaspnetapp:v1
 A sample docker app built on Alpine linux 3.1 version using C# dotnet core version 3.1. The sample application accesses an Azure Key Vault under the context of Managed Identity. If the Managed Identity is configured, it returns the secret stored in the Azure Key Vault else it returns a message stating "Cannot access key vault". To run the application locally, run the docker image & browse the application at http://localhost/keyvault
 
 The docker image can be downloaded from docker hub by running the below command 
