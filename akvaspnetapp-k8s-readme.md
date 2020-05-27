@@ -2,6 +2,7 @@
 
 ## Create Azure resources
 ### Create AKS cluster
+Create an AKS cluster. In this case, the cluster is created in a Resource Group named *rg-aksAkv-demo*. The steps not shown here is create a Service Principal and assign it *Contributor* role scoped to the Resource Group created above.
 ```bash
 spAppId=""
 spObjectId=""
@@ -17,14 +18,20 @@ az aks create --name aks-abs-demo \
 az aks get-credentials --resource-group $rgName --name aks-abs-demo --verbose
 ```
 
-### Create a User Assigned Managed Identity on Azure & assign it the Role
+### Create a User Assigned Managed Identity on Azure & assign it the Roles
+Create the user assigned managed identity
 ```bash
 identityName="mi-akvaspnetapp"
 az identity create -g $rgName -n $identityName --subscription $subscriptionId --verbose
 # Store the identity client Id and resource Id
 identityClientId="$(az identity show -g $rgName -n $identityName --subscription $subscriptionId --query clientId -o tsv)"
 identityResourceId="$(az identity show -g $rgName -n $identityName --subscription $subscriptionId --query id -o tsv)"
-
+principalId="$(az identity show -g $rgName -n $identityName --subscription $subscriptionId --query principalId -o tsv)"
+```
+Role assignments
+* Assign *Reader* role to the *Managed Identity* scoped over *Resource Group*
+* Assign *Managed Identity Operator* role to the *Service Principal* scoped over *Managed Identity*
+```bash
 # Assign reader role to the identity on the appropriate Resource Group, in this case on the node RG i.e. MC*
 # Store the identity assignment id
 nodeRgName="MC_rg-aksAkv-demo_aks-abs-demo_eastus"
@@ -37,7 +44,25 @@ spAppId=$(az aks show -g $rgName -n aks-abs-demo --query servicePrincipalProfile
 az role assignment create --role "Managed Identity Operator" --assignee $spAppId --scope $identityResourceId
 ```
 
-## Configure Pod Identity
+## Create Azure Key Vault & provide Managed Identity access for appropriate operations on it
+Create Azure Key Vault
+```bash
+# create key vault
+kvName="kv-abs"
+az keyvault create --name $kvName -g $rgName --verbose
+# Note down the key vault uri --> "vaultUri": "https://kv-abs.vault.azure.net/". This will be updated in the configmap when creating the kubernetes object in "akvaspnetapp.yaml"
+
+# Place a secret in the key vault
+az keyvault secret set --vault-name $kvName --name "db-credentials" --value "abs-secret"
+```
+Provide Managed Identity access for appropriate operations on Azure Key Vault
+```bash
+# On the key vault, give the managed identity access to do get & list operations
+kvName="kv-abs"
+az keyvault set-policy --name $kvName --object-id $principalId --secret-permissions get list
+```
+
+## Configure Pod Identity & sample application
 ### 1. Deploy aad-pod-identity
 ```bash
 # Deploy aad-pod-identity components to an RBAC-enabled cluster
@@ -88,11 +113,17 @@ labels:
   app: akvaspnetapp
   aadpodidbinding: mi-akvaspnetapp
 ```
+Before deploying the application pod, update the configmap to point to the Azure Key Vault Uri in [akvaspnetapp.yaml](/src/akvaspnetapp.yaml). The values to be updated is "VaultUri".
 Deploy the application pod
 ```bash
 # Deploy the application pod
 kubectl apply -f akvaspnetapp.yaml
+# Get the resources 
+kubectl get all
 ```
+Test the application by browsing the External-IP of the service akvaspnetapp. If everything is configured correctly, then browsing the web page https://<External-IP>/keyvault should list the value stored in the Azure Key Vault.
+
+![Alt text](/images/aks-mi-access-keyvault.jpg)
 
 ## Clean up the resources
 ```bash
