@@ -44,7 +44,7 @@ spAppId=$(az aks show -g $rgName -n aks-abs-demo --query servicePrincipalProfile
 az role assignment create --role "Managed Identity Operator" --assignee $spAppId --scope $identityResourceId
 ```
 
-## Create Azure Key Vault & provide Managed Identity access for appropriate operations on it
+## Create Azure Key Vault & provide Managed Identity access on it
 Create Azure Key Vault
 ```bash
 # create key vault
@@ -58,7 +58,6 @@ az keyvault secret set --vault-name $kvName --name "db-credentials" --value "abs
 Provide Managed Identity access for appropriate operations on Azure Key Vault
 ```bash
 # On the key vault, give the managed identity access to do get & list operations
-kvName="kv-abs"
 az keyvault set-policy --name $kvName --object-id $principalId --secret-permissions get list
 ```
 
@@ -121,6 +120,8 @@ kubectl apply -f akvaspnetapp.yaml
 # Get the resources 
 kubectl get all
 ```
+The sample application deployed is accessing an Azure Key Vault under the context of Managed Identity. If the Managed Identity is configured, it returns the secret stored in the Azure Key Vault else it returns a message stating "Cannot access key vault". The dockerfile & application source code can be found [here.](https://github.com/abhinabsarkar/webapp-mi-keyvault/tree/master/src)
+
 Test the application by browsing the External-IP of the service akvaspnetapp. If everything is configured correctly, then browsing the web page https://<External-IP>/keyvault should list the value stored in the Azure Key Vault.
 
 ![Alt text](/images/aks-mi-access-keyvault.jpg)
