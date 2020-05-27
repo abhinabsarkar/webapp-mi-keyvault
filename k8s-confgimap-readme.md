@@ -23,6 +23,16 @@ NAME                                      DESIRED   CURRENT   READY   AGE   CONT
 replicaset.apps/akvaspnetapp-5c7677c8f6   1         1         1       13m   akvaspnetapp   abhinabsarkar/abs-akvaspnetapp:v1   app=akvaspnetapp,pod-template-hash=5c7677c8f6
 ```
 
+Validate by running the below curl command
+```bash
+curl http://localhost/keyvault
+```
+
+If the container doesn't spin up, look into the container logs
+```bash
+docker logs <container_id>
+```
+
 ### Next Steps
 * Run this on AKS
 

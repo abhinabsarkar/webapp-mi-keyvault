@@ -20,20 +20,30 @@ namespace akvwebapp
 
         string vaultUri = "";
         string dbCredentials = "";
-
+        // flag to check if running locally in a container (not in k8s)
+        bool standAloneContainer = true;
+        
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
             var builder = new ConfigurationBuilder()
                  .SetBasePath(Directory.GetCurrentDirectory())
-                 .AddJsonFile("config/appsettings.json");
+                 // To enable it to read it from configmap in k8s, updated the path.  
+                 // In the k8s, the appsettings.json will be placed inside config folder.                 
+                 .AddJsonFile("config/appsettings.json", optional: true, reloadOnChange: true);
 
             var config = builder.Build();
 
             var appConfig = config.GetSection("EnvironmentConfig").Get<EnvironmentConfig>();
-            vaultUri = appConfig.VaultUri;
-            dbCredentials = appConfig.DBCredentials;
+            // if running locally in a container which is not in k8s & no configmaps configured
+            if (appConfig != null)
+            {
+                vaultUri = appConfig.VaultUri;
+                dbCredentials = appConfig.DBCredentials;
+                standAloneContainer =  false;
+            }
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -60,13 +70,22 @@ namespace akvwebapp
             string secretValue = null;
             try
             {
-                var client = new SecretClient(new Uri(vaultUri), new DefaultAzureCredential(),options);
-                KeyVaultSecret secret = client.GetSecret(dbCredentials);
-                secretValue = secret.Value;
+                // If running in kubernetes
+                if (standAloneContainer == false)
+                {
+                    var client = new SecretClient(new Uri(vaultUri), new DefaultAzureCredential(),options);
+                    KeyVaultSecret secret = client.GetSecret(dbCredentials);
+                    secretValue = secret.Value;
+                }
+                else
+                {
+                    secretValue = "The app running locally on a container cannot access the appsettings.json inside config folder which is created by k8s configmap";
+                }
+
             }
-            catch (Exception)
+            catch (Exception ex)
             {                                
-                secretValue = "Cannot access key vault. Set up Managed Identity!!!";
+                secretValue = "Cannot access key vault. " + Environment.NewLine + ex.Message;
             }
 
             app.UseEndpoints(endpoints =>

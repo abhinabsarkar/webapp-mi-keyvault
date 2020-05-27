@@ -126,6 +126,10 @@ Test the application by browsing the External-IP of the service akvaspnetapp. If
 
 ![Alt text](/images/aks-mi-access-keyvault.jpg)
 
+Change the configmap,  restart the pod
+```bash
+kubectl scale deployment akvaspnetapp --replicas=0
+```
 ## Clean up the resources
 ```bash
 # Delete the AKS cluster
